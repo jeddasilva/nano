@@ -39,6 +39,8 @@ export default async function HomePage() {
           alt={`${brand} studio`}
           fill
           priority
+          unoptimized
+          quality={100}
           sizes="100vw"
           className="object-cover object-center"
         />

@@ -26,6 +26,7 @@ export function FilterBar({ attributes }: { attributes: AttributeDefinition[] })
   }, [attributes, searchParams]);
 
   const [ranges, setRanges] = useState<RangeState>(initialRanges);
+  const [query, setQuery] = useState(searchParams.get('q') || '');
   const tagsParam = searchParams.get('tags') || '';
   const [tagsInput, setTagsInput] = useState(tagsParam);
 
@@ -34,12 +35,23 @@ export function FilterBar({ attributes }: { attributes: AttributeDefinition[] })
   }, [initialRanges]);
 
   useEffect(() => {
+    setQuery(searchParams.get('q') || '');
+  }, [searchParams]);
+
+  useEffect(() => {
     setTagsInput(tagsParam);
   }, [tagsParam]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
+
+      const cleanedQuery = query.trim();
+      if (cleanedQuery) {
+        params.set('q', cleanedQuery);
+      } else {
+        params.delete('q');
+      }
 
       for (const attribute of attributes) {
         const range = ranges[attribute.id];
@@ -79,80 +91,89 @@ export function FilterBar({ attributes }: { attributes: AttributeDefinition[] })
     }, 250);
 
     return () => clearTimeout(timeout);
-  }, [attributes, pathname, ranges, router, searchParams, tagsInput]);
-
-  if (attributes.length === 0) {
-    return (
-      <p className="text-sm text-mute">
-        Mood filters appear here once attributes are configured in admin.
-      </p>
-    );
-  }
+  }, [attributes, pathname, query, ranges, router, searchParams, tagsInput]);
 
   return (
     <div className={`space-y-8 ${isPending ? 'opacity-70' : 'opacity-100'} transition-opacity`}>
-      {attributes.map((attribute) => {
-        const range = ranges[attribute.id] || {
-          min: attribute.minValue,
-          max: attribute.maxValue
-        };
+      <label className="block">
+        <span className="sr-only">Search catalog</span>
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search works…"
+          className="w-full border-b border-line bg-transparent py-3 text-base outline-none placeholder:text-mute/70 focus:border-ink"
+        />
+      </label>
 
-        return (
-          <div key={attribute.id}>
-            <div className="mb-3 flex items-baseline justify-between">
-              <label className="text-sm text-ink">{attribute.label}</label>
-              <span className="text-xs tabular-nums text-mute">
-                {range.min} – {range.max}
-              </span>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="range"
-                min={attribute.minValue}
-                max={attribute.maxValue}
-                step={attribute.step}
-                value={range.min}
-                aria-label={`${attribute.label} minimum`}
-                onChange={(event) => {
-                  const min = Number(event.target.value);
-                  setRanges((current) => ({
-                    ...current,
-                    [attribute.id]: {
-                      min: Math.min(min, current[attribute.id]?.max ?? attribute.maxValue),
-                      max: current[attribute.id]?.max ?? attribute.maxValue
-                    }
-                  }));
-                }}
-                className="w-full"
-              />
-              <input
-                type="range"
-                min={attribute.minValue}
-                max={attribute.maxValue}
-                step={attribute.step}
-                value={range.max}
-                aria-label={`${attribute.label} maximum`}
-                onChange={(event) => {
-                  const max = Number(event.target.value);
-                  setRanges((current) => ({
-                    ...current,
-                    [attribute.id]: {
-                      min: current[attribute.id]?.min ?? attribute.minValue,
-                      max: Math.max(max, current[attribute.id]?.min ?? attribute.minValue)
-                    }
-                  }));
-                }}
-                className="w-full"
-              />
-            </div>
-          </div>
-        );
-      })}
+      {attributes.length === 0 ? (
+        <p className="text-sm text-mute">
+          Mood filters appear here once attributes are configured in admin.
+        </p>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {attributes.map((attribute) => {
+            const range = ranges[attribute.id] || {
+              min: attribute.minValue,
+              max: attribute.maxValue
+            };
 
-      <div>
-        <label htmlFor="mood-tags" className="mb-3 block text-sm text-ink">
-          Mood tags
-        </label>
+            return (
+              <div key={attribute.id}>
+                <div className="mb-3 flex items-baseline justify-between">
+                  <label className="text-sm text-ink">{attribute.label}</label>
+                  <span className="text-xs tabular-nums text-mute">
+                    {range.min} – {range.max}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  <input
+                    type="range"
+                    min={attribute.minValue}
+                    max={attribute.maxValue}
+                    step={attribute.step}
+                    value={range.min}
+                    aria-label={`${attribute.label} minimum`}
+                    onChange={(event) => {
+                      const min = Number(event.target.value);
+                      setRanges((current) => ({
+                        ...current,
+                        [attribute.id]: {
+                          min: Math.min(min, current[attribute.id]?.max ?? attribute.maxValue),
+                          max: current[attribute.id]?.max ?? attribute.maxValue
+                        }
+                      }));
+                    }}
+                    className="w-full"
+                  />
+                  <input
+                    type="range"
+                    min={attribute.minValue}
+                    max={attribute.maxValue}
+                    step={attribute.step}
+                    value={range.max}
+                    aria-label={`${attribute.label} maximum`}
+                    onChange={(event) => {
+                      const max = Number(event.target.value);
+                      setRanges((current) => ({
+                        ...current,
+                        [attribute.id]: {
+                          min: current[attribute.id]?.min ?? attribute.minValue,
+                          max: Math.max(max, current[attribute.id]?.min ?? attribute.minValue)
+                        }
+                      }));
+                    }}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <label className="block">
+        <span className="mb-2 block text-sm text-mute">Mood tags</span>
         <input
           id="mood-tags"
           value={tagsInput}
@@ -160,7 +181,7 @@ export function FilterBar({ attributes }: { attributes: AttributeDefinition[] })
           placeholder="calm, dusk, soft"
           className="w-full border-b border-line bg-transparent py-2 text-sm outline-none placeholder:text-mute/70 focus:border-ink"
         />
-      </div>
+      </label>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { ArtworkCard } from 'components/art/artwork-card';
 import { FilterBar } from 'components/catalog/filter-bar';
 import { StorefrontShell } from 'components/layout/storefront-shell';
+import { fuzzyMatch } from 'lib/fuzzy';
 import { getCollectionProducts, getProducts } from 'lib/fourthwall';
 import { getActiveAttributeDefinitions, getFilteredProductIds } from 'lib/queries';
 import { Product } from 'lib/types';
@@ -37,7 +38,9 @@ function parseFilters(
           .filter(Boolean)
       : [];
 
-  return { filters, tags };
+  const query = typeof searchParams.q === 'string' ? searchParams.q : '';
+
+  return { filters, tags, query };
 }
 
 async function loadCatalogProducts(): Promise<Product[]> {
@@ -57,7 +60,7 @@ export default async function CatalogPage({
 }) {
   const params = await searchParams;
   const attributes = await getActiveAttributeDefinitions();
-  const { filters, tags } = parseFilters(
+  const { filters, tags, query } = parseFilters(
     params,
     attributes.map((attribute) => attribute.id)
   );
@@ -66,42 +69,48 @@ export default async function CatalogPage({
   const filteredIds = hasFilters ? await getFilteredProductIds(filters, tags) : null;
   const allProducts = await loadCatalogProducts();
 
-  const catalog =
+  const attributeFiltered =
     filteredIds === null
       ? allProducts
       : filteredIds.length === 0
         ? []
         : allProducts.filter((product) => filteredIds.includes(product.id));
 
+  const catalog = attributeFiltered.filter((product) =>
+    fuzzyMatch(query, [
+      product.title,
+      product.description,
+      product.handle,
+      product.tags.join(' '),
+      ...product.variants.map((variant) => `${variant.title} ${variant.sku}`)
+    ])
+  );
+
   return (
     <StorefrontShell>
       <div className="mx-auto max-w-6xl px-6 py-14">
-        <div className="mb-12 art-fade">
+        <div className="mb-10 art-fade">
           <h1 className="font-display text-4xl tracking-tight md:text-5xl">Catalog</h1>
           <p className="mt-3 max-w-lg text-mute">
-            Filter works by emotional tone. Adjust the sliders to find a feeling.
+            Search works, then refine by feeling.
           </p>
         </div>
 
-        <div className="grid gap-12 lg:grid-cols-[220px_1fr]">
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <Suspense fallback={null}>
-              <FilterBar attributes={attributes} />
-            </Suspense>
-          </aside>
-
-          <div>
-            {catalog.length === 0 ? (
-              <p className="py-24 text-center text-sm text-mute">No works match these filters.</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 xl:grid-cols-3">
-                {catalog.map((product, index) => (
-                  <ArtworkCard key={product.id} product={product} index={index} />
-                ))}
-              </div>
-            )}
-          </div>
+        <div className="mb-12 border-b border-line pb-10">
+          <Suspense fallback={null}>
+            <FilterBar attributes={attributes} />
+          </Suspense>
         </div>
+
+        {catalog.length === 0 ? (
+          <p className="py-24 text-center text-sm text-mute">No works match these filters.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 xl:grid-cols-3">
+            {catalog.map((product, index) => (
+              <ArtworkCard key={product.id} product={product} index={index} />
+            ))}
+          </div>
+        )}
       </div>
     </StorefrontShell>
   );
