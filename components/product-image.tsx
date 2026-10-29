@@ -5,7 +5,7 @@ const useFourthwallImages = process.env.NEXT_PUBLIC_USE_FW_IMAGE_OPTIMIZATION ==
 
 type ProductImageProps = {
   src: string;
-  transformedSrc: string;
+  transformedSrc?: string | null;
   alt: string;
   className?: string;
   fill?: boolean;
@@ -26,14 +26,18 @@ export function ProductImage({
   sizes,
   priority
 }: ProductImageProps) {
-  if (useFourthwallImages) {
+  const imageSrc = (transformedSrc || src || '').trim();
+  if (!imageSrc) return null;
+
+  if (useFourthwallImages || imageSrc.includes('fourthwall')) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={transformedSrc}
+        src={imageSrc}
         alt={alt}
-        className={clsx(className, { 'absolute inset-0': fill })}
-        width={width}
-        height={height}
+        className={clsx(className, { 'absolute inset-0 h-full w-full': fill })}
+        width={fill ? undefined : width}
+        height={fill ? undefined : height}
         loading={priority ? 'eager' : 'lazy'}
       />
     );
@@ -41,7 +45,7 @@ export function ProductImage({
 
   return (
     <Image
-      src={src}
+      src={imageSrc}
       alt={alt}
       className={className}
       fill={fill}

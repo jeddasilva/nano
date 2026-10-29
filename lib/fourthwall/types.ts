@@ -16,9 +16,11 @@ export type FourthwallProduct = {
   name: string;
   slug: string;
   description: string;
+  type?: string;
 
   images: FourthwallProductImage[];
   variants: FourthwallProductVariant[];
+  thumbnailImage?: FourthwallProductImage | null;
 
   updatedAt: string;
 };

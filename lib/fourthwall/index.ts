@@ -146,18 +146,12 @@ export async function getProducts({
   currency: string;
   limit?: number;
 }): Promise<Product[]> {
-  try {
-    const res = await fourthwallGet<{ results: FourthwallProduct[] }>(
-      `${API_URL}/products`,
-      { currency, limit },
-      { next: { revalidate: 3600, tags: ['products'] } }
-    );
-
-    return reshapeProducts(res.body.results || []);
-  } catch (e) {
-    console.error('Error fetching products:', e);
-    return [];
-  }
+  // Storefront API lists products through collections (built-in `all`).
+  return getCollectionProducts({
+    collection: 'all',
+    currency,
+    limit
+  });
 }
 
 export async function getProduct({ handle, currency } : { handle: string, currency: string }): Promise<Product | undefined> {
