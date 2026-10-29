@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
+  outputFileTracingIncludes: {
+    '/opengraph-image': ['./fonts/Inter-Bold.ttf']
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
