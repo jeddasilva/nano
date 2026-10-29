@@ -2,6 +2,7 @@ import { ArtworkCard } from 'components/art/artwork-card';
 import { StorefrontShell } from 'components/layout/storefront-shell';
 import { getCollectionProducts, getShop, getShopOgImage } from 'lib/fourthwall';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 
 const currency = process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || 'USD';
@@ -17,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: 'Original works and archival prints.',
     openGraph: {
       type: 'website',
-      images: ogImageUrl ? [{ url: ogImageUrl }] : undefined
+      images: [{ url: ogImageUrl || '/cover.jpg' }]
     }
   };
 }
@@ -32,12 +33,21 @@ export default async function HomePage() {
 
   return (
     <StorefrontShell>
-      <section className="relative flex min-h-[72vh] flex-col justify-end overflow-hidden border-b border-line bg-white px-6 pb-16 pt-28">
+      <section className="relative flex min-h-[88vh] flex-col justify-end overflow-hidden">
+        <Image
+          src="/cover.jpg"
+          alt={`${brand} studio`}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,0,0,0.03),_transparent_55%)]"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white via-white/55 to-transparent"
         />
-        <div className="relative mx-auto w-full max-w-6xl art-fade">
+
+        <div className="relative mx-auto w-full max-w-6xl px-6 pb-16 pt-40 art-fade">
           <p className="font-display text-5xl tracking-tight text-ink md:text-7xl lg:text-8xl">
             {brand}
           </p>
@@ -51,7 +61,10 @@ export default async function HomePage() {
             >
               View catalog
             </Link>
-            <Link href="/catalog" className="text-sm text-mute underline-offset-4 hover:text-ink hover:underline">
+            <Link
+              href="/catalog"
+              className="text-sm text-mute underline-offset-4 hover:text-ink hover:underline"
+            >
               Browse by feeling
             </Link>
           </div>
