@@ -44,7 +44,7 @@ export default async function HomePage() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white via-white/55 to-transparent"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/70 via-white/20 to-transparent"
         />
 
         <div className="relative mx-auto w-full max-w-6xl px-6 pb-16 pt-40 art-fade">
