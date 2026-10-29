@@ -1,12 +1,12 @@
 import { ProductTagger } from 'components/admin/product-tagger';
 import { getCollectionProducts, getProducts } from 'lib/fourthwall';
-import { getActiveAttributeDefinitions, getAllProductMetadata } from 'lib/queries';
+import { getAllAttributeDefinitions, getAllProductMetadata } from 'lib/queries';
 
 const currency = process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || 'USD';
 
 export default async function AdminProductsPage() {
   const [attributes, metadata, productsFromApi, collectionProducts] = await Promise.all([
-    getActiveAttributeDefinitions(),
+    getAllAttributeDefinitions(),
     getAllProductMetadata(),
     getProducts({ currency }),
     getCollectionProducts({
@@ -22,7 +22,7 @@ export default async function AdminProductsPage() {
       <div>
         <h1 className="font-display text-3xl tracking-tight">Products</h1>
         <p className="mt-2 text-sm text-mute">
-          Score each Fourthwall product against active mood attributes.
+          Preview each work and assign mood attribute levels for catalog filtering.
         </p>
       </div>
       <ProductTagger products={products} attributes={attributes} metadata={metadata} />
