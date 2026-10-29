@@ -2,7 +2,6 @@ import { ArtworkCard } from 'components/art/artwork-card';
 import { StorefrontShell } from 'components/layout/storefront-shell';
 import { getCollectionProducts, getShop, getShopOgImage } from 'lib/fourthwall';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 
 const currency = process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || 'USD';
@@ -18,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: 'Original works and archival prints.',
     openGraph: {
       type: 'website',
-      images: [{ url: ogImageUrl || '/cover.jpg' }]
+      images: [{ url: ogImageUrl || '/cover.png' }]
     }
   };
 }
@@ -34,19 +33,18 @@ export default async function HomePage() {
   return (
     <StorefrontShell>
       <section className="relative flex min-h-[88vh] flex-col justify-end overflow-hidden">
-        <Image
-          src="/cover.jpg"
+        {/* Plain img — no Next.js image optimizer / compression */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/cover.png"
           alt={`${brand} studio`}
-          fill
-          priority
-          unoptimized
-          quality={100}
-          sizes="100vw"
-          className="object-cover object-center"
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/70 via-white/20 to-transparent"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/50 via-white/10 to-transparent"
         />
 
         <div className="relative mx-auto w-full max-w-6xl px-6 pb-16 pt-40 art-fade">
