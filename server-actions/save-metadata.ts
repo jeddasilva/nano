@@ -8,7 +8,17 @@ export async function saveProductMetadata(
   metrics: Record<string, number>,
   tags: string[]
 ) {
-  await upsertProductMetadata(productId, metrics, tags);
-  revalidatePath('/admin/products');
-  revalidatePath('/catalog');
+  try {
+    await upsertProductMetadata(productId, metrics, tags);
+    revalidatePath('/admin/products');
+    revalidatePath('/catalog');
+    return { ok: true as const };
+  } catch (error) {
+    console.error('[saveProductMetadata]', error);
+    return {
+      ok: false as const,
+      error: error instanceof Error ? error.message : 'Failed to save metadata'
+    };
+  }
 }
+

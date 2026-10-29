@@ -1,4 +1,4 @@
-import { requireDb } from './index';
+import { ensureSchema, requireDb } from './index';
 import { attributeDefinitions } from './schema';
 
 const DEFAULT_ATTRIBUTES = [
@@ -35,6 +35,7 @@ const DEFAULT_ATTRIBUTES = [
 ] as const;
 
 export async function seedAttributeDefinitions() {
+  await ensureSchema();
   const database = requireDb();
 
   for (const attribute of DEFAULT_ATTRIBUTES) {

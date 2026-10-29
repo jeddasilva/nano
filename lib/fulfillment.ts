@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { eq } from 'drizzle-orm';
-import { requireDb } from 'db';
+import { ensureSchema, requireDb } from 'db';
 import { orderFulfillments } from 'db/schema';
 import { getFulfillmentKind, getProdigiSku, type FulfillmentKind } from 'lib/sku';
 
@@ -50,6 +50,7 @@ export async function routeOrderFulfillment({
 }
 
 async function createOriginalFulfillment(orderId: string) {
+  await ensureSchema();
   const database = requireDb();
 
   await database.insert(orderFulfillments).values({
@@ -139,6 +140,7 @@ async function createProdigiFulfillment({
     throw new Error('Failed to create Prodigi order');
   }
 
+  await ensureSchema();
   const database = requireDb();
   await database.insert(orderFulfillments).values({
     id: crypto.randomUUID(),
@@ -189,6 +191,7 @@ export async function syncTrackingToFourthwall({
     throw new Error('Failed to sync tracking to Fourthwall');
   }
 
+  await ensureSchema();
   const database = requireDb();
   await database
     .update(orderFulfillments)

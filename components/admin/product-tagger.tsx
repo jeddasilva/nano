@@ -64,8 +64,8 @@ export function ProductTagger({
                 .split(',')
                 .map((tag) => tag.trim())
                 .filter(Boolean);
-              await saveProductMetadata(selected.id, metrics, parsedTags);
-              setMessage('Saved');
+              const result = await saveProductMetadata(selected.id, metrics, parsedTags);
+              setMessage(result.ok ? 'Saved' : result.error || 'Failed to save');
             });
           }}
         >

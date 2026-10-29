@@ -1,8 +1,11 @@
 import { AttributeManager } from 'components/admin/attribute-manager';
-import { getAllAttributeDefinitions } from 'lib/queries';
+import { getAllAttributeDefinitions, getDatabaseStatus } from 'lib/queries';
 
 export default async function AdminAttributesPage() {
-  const attributes = await getAllAttributeDefinitions();
+  const [attributes, database] = await Promise.all([
+    getAllAttributeDefinitions(),
+    Promise.resolve(getDatabaseStatus())
+  ]);
 
   return (
     <div className="space-y-8">
@@ -12,7 +15,7 @@ export default async function AdminAttributesPage() {
           These power the catalog filter sliders. Creating one here requires no migration.
         </p>
       </div>
-      <AttributeManager attributes={attributes} />
+      <AttributeManager attributes={attributes} databaseConfigured={database.configured} />
     </div>
   );
 }
