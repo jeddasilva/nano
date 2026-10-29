@@ -2,10 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #737373;
+  --line: #e8e8e8;
+  --soft: #f7f7f7;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
 }
 
 @supports (font: -apple-system-body) and (-webkit-appearance: none) {
@@ -17,5 +29,65 @@
 a,
 input,
 button {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-50 dark:focus-visible:ring-neutral-600 dark:focus-visible:ring-offset-neutral-900;
+  @apply focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+}
+
+::selection {
+  background: #111111;
+  color: #ffffff;
+}
+
+.art-fade {
+  animation: artFade 0.7s ease both;
+}
+
+.art-rise {
+  animation: artRise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes artFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes artRise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 1px;
+  background: var(--line);
+  outline: none;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--fg);
+  cursor: pointer;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--fg);
+  cursor: pointer;
 }

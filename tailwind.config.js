@@ -6,7 +6,14 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-geist-sans)']
+        sans: ['var(--font-dm-sans)', 'sans-serif'],
+        display: ['var(--font-syne)', 'sans-serif']
+      },
+      colors: {
+        ink: '#111111',
+        mute: '#737373',
+        line: '#e8e8e8',
+        soft: '#f7f7f7'
       },
       keyframes: {
         fadeIn: {

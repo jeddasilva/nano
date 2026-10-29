@@ -1,10 +1,22 @@
-import { GeistSans } from 'geist/font/sans';
+import { DM_Sans, Syne } from 'next/font/google';
 import { GTM_ID } from 'lib/analytics';
 import { getAnalyticsConfig } from 'lib/fourthwall';
 import { ensureStartsWith } from 'lib/utils';
 import Script from 'next/script';
 import { ReactNode } from 'react';
 import './globals.css';
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
+  display: 'swap'
+});
+
+const syne = Syne({
+  subsets: ['latin'],
+  variable: '--font-syne',
+  display: 'swap'
+});
 
 const { TWITTER_CREATOR, TWITTER_SITE, SITE_NAME } = process.env;
 const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
@@ -36,7 +48,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const analytics = await getAnalyticsConfig();
 
   return (
-    <html lang="en" className={GeistSans.variable}>
+    <html lang="en" className={`${dmSans.variable} ${syne.variable}`}>
       <head>
         <Script id="analytics-config" strategy="beforeInteractive">
           {`
@@ -56,7 +68,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             })(window,document,'script','dataLayer','${GTM_ID}');`}
         </Script>
       </head>
-      <body className="bg-neutral-50 text-black selection:bg-teal-300 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
+      <body className="min-h-screen bg-white font-sans text-ink antialiased">
         {children}
       </body>
     </html>

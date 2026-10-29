@@ -105,20 +105,26 @@ const reshapeImages = (images: FourthwallProductImage[], productTitle: string): 
 };
 
 const reshapeVariants = (variants: FourthwallProductVariant[]): ProductVariant[] => {
-  return variants.map((v) => ({
-    id: v.id,
-    title: v.name,
-    availableForSale: v.stock.type === 'UNLIMITED' || (v.stock.inStock || 0) > 0,
-    images: reshapeImages(v.images, v.name),
-    selectedOptions: [{
-      name: 'Size',
-      value: v.attributes.size?.name
-    }, {
-      name: 'Color',
-      value: v.attributes.color?.name
-    }],
-    price: reshapeMoney(v.unitPrice),
-  }))
+  return variants.map((v) => {
+    const inventory = v.stock.type === 'UNLIMITED' ? null : (v.stock.inStock ?? 0);
+
+    return {
+      id: v.id,
+      title: v.name,
+      sku: v.sku || '',
+      availableForSale: inventory === null || inventory > 0,
+      inventory,
+      images: reshapeImages(v.images, v.name),
+      selectedOptions: [{
+        name: 'Size',
+        value: v.attributes.size?.name
+      }, {
+        name: 'Color',
+        value: v.attributes.color?.name
+      }],
+      price: reshapeMoney(v.unitPrice),
+    };
+  });
 }
 
 /**

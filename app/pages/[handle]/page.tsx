@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation';
-import Footer from 'components/layout/footer';
+import { StorefrontShell } from 'components/layout/storefront-shell';
 import Prose from 'components/prose';
-import { Wrapper } from 'components/wrapper';
-import { getShop, getStaticPage } from 'lib/fourthwall';
+import { getStaticPage } from 'lib/fourthwall';
 
 export const revalidate = 3600;
 
@@ -14,22 +13,20 @@ export function generateStaticParams() {
 
 export default async function StaticPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
-
-  const [page, shop] = await Promise.all([
-    getStaticPage(handle),
-    getShop()
-  ]);
+  const page = await getStaticPage(handle);
 
   if (!page) {
     return notFound();
   }
 
   return (
-    <Wrapper currency="USD" shop={shop}>
-      <div className="mx-auto max-w-4xl px-4 py-12">
-        <Prose html={page.bodyHtml} />
+    <StorefrontShell>
+      <div className="mx-auto max-w-3xl px-6 py-16">
+        <h1 className="font-display text-4xl tracking-tight">{page.title}</h1>
+        <div className="mt-10">
+          <Prose html={page.bodyHtml} />
+        </div>
       </div>
-      <Footer />
-    </Wrapper>
+    </StorefrontShell>
   );
 }

@@ -1,32 +1,41 @@
 import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { routeOrderFulfillment } from 'lib/fulfillment';
 
-// Webhook event types from Fourthwall
-type WebhookEventType =
-  | 'PRODUCT_CREATED'
-  | 'PRODUCT_UPDATED'
-  | 'COLLECTION_UPDATED';
+type CacheWebhookEventType = 'PRODUCT_CREATED' | 'PRODUCT_UPDATED' | 'COLLECTION_UPDATED';
+
+type OrderWebhookEventType = 'ORDER_PLACED';
+
+type WebhookEventType = CacheWebhookEventType | OrderWebhookEventType | string;
 
 interface WebhookPayload {
   type: WebhookEventType;
   data: {
-    id: string;
-    slug: string;
+    id?: string;
+    slug?: string;
+    orderId?: string;
+    offers?: Array<{
+      quantity?: number;
+      variant?: { sku?: string };
+    }>;
+    shippingAddress?: {
+      name?: string;
+      line1?: string;
+      postalCode?: string;
+      country?: string;
+      city?: string;
+    };
     [key: string]: unknown;
   };
 }
 
-/**
- * Verify HMAC-SHA256 signature from Fourthwall webhook
- */
 function verifySignature(payload: string, signature: string, secret: string): boolean {
   const expectedSignature = crypto
     .createHmac('sha256', secret)
     .update(payload, 'utf8')
     .digest('base64');
 
-  // Use timing-safe comparison to prevent timing attacks
   try {
     return crypto.timingSafeEqual(
       Buffer.from(signature, 'base64'),
@@ -37,27 +46,22 @@ function verifySignature(payload: string, signature: string, secret: string): bo
   }
 }
 
-/**
- * Get the cache tag(s) to invalidate based on webhook event type
- */
 function getTagsToInvalidate(payload: WebhookPayload): string[] {
   const { type, data } = payload;
 
   if (!data.slug) {
-    console.warn('[Webhook] Missing slug in webhook payload:', type);
     return [];
   }
 
   switch (type) {
     case 'PRODUCT_CREATED':
     case 'PRODUCT_UPDATED':
-      return [`product-${data.slug}`, 'collection-all'];
+      return [`product-${data.slug}`, 'collection-all', 'products'];
 
     case 'COLLECTION_UPDATED':
       return [`collection-${data.slug}`];
 
     default:
-      console.warn('[Webhook] Unknown event type:', type);
       return [];
   }
 }
@@ -65,16 +69,11 @@ function getTagsToInvalidate(payload: WebhookPayload): string[] {
 export async function POST(request: NextRequest) {
   const webhookSecret = process.env.FOURTHWALL_WEBHOOK_SECRET;
 
-  // Check if webhook secret is configured
   if (!webhookSecret) {
     console.error('[Webhook] FOURTHWALL_WEBHOOK_SECRET is not configured');
-    return NextResponse.json(
-      { error: 'Missing webhook secret configuration' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Missing webhook secret configuration' }, { status: 400 });
   }
 
-  // Get the signature header
   const signature = request.headers.get('X-Fourthwall-Hmac-SHA256');
 
   if (!signature) {
@@ -82,16 +81,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
-  // Read raw body for signature verification
   const rawBody = await request.text();
 
-  // Verify signature
   if (!verifySignature(rawBody, signature, webhookSecret)) {
     console.warn('[Webhook] Signature verification failed');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
-  // Parse the payload
   let payload: WebhookPayload;
   try {
     payload = JSON.parse(rawBody);
@@ -100,23 +96,41 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
-  console.log('[Webhook] Received event:', payload.type, 'for:', payload.data?.slug);
+  console.log('[Webhook] Received event:', payload.type);
 
-  // Get tags to invalidate
+  if (payload.type === 'ORDER_PLACED') {
+    const orderId = payload.data.orderId || payload.data.id;
+    const offers = payload.data.offers || [];
+
+    if (!orderId) {
+      return NextResponse.json({ error: 'Missing order id' }, { status: 400 });
+    }
+
+    try {
+      await routeOrderFulfillment({
+        orderId,
+        offers,
+        shippingAddress: payload.data.shippingAddress
+      });
+
+      return NextResponse.json({ received: true, routed: true }, { status: 200 });
+    } catch (error) {
+      console.error('[Webhook] Fulfillment routing failed:', error);
+      return NextResponse.json({ error: 'Fulfillment routing failed' }, { status: 500 });
+    }
+  }
+
   const tags = getTagsToInvalidate(payload);
 
   if (tags.length === 0) {
-    console.warn('[Webhook] No tags to invalidate for event:', payload.type);
     return NextResponse.json(
       { revalidated: false, reason: 'No tags to invalidate', timestamp: Date.now() },
       { status: 200 }
     );
   }
 
-  // Revalidate each tag
   try {
     for (const tag of tags) {
-      console.log('[Webhook] Revalidating tag:', tag);
       revalidateTag(tag, 'max');
     }
 

@@ -80,7 +80,9 @@ export type ProductOption = {
 export type ProductVariant = {
   id: string;
   title: string;
+  sku: string;
   availableForSale: boolean;
+  inventory: number | null;
   selectedOptions: {
     name: string;
     value?: string;

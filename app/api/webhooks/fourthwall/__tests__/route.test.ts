@@ -6,6 +6,10 @@ vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
 }));
 
+vi.mock('lib/fulfillment', () => ({
+  routeOrderFulfillment: vi.fn(),
+}));
+
 import { revalidateTag } from 'next/cache';
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
@@ -125,9 +129,10 @@ describe('Fourthwall Webhook Route', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.tags).toEqual(['product-awesome-shirt', 'collection-all']);
+      expect(data.tags).toEqual(['product-awesome-shirt', 'collection-all', 'products']);
       expect(revalidateTag).toHaveBeenCalledWith('product-awesome-shirt', 'max');
       expect(revalidateTag).toHaveBeenCalledWith('collection-all', 'max');
+      expect(revalidateTag).toHaveBeenCalledWith('products', 'max');
     });
 
     it('should invalidate product-{slug} tag for PRODUCT_CREATED', async () => {
@@ -146,9 +151,10 @@ describe('Fourthwall Webhook Route', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.tags).toEqual(['product-new-product', 'collection-all']);
+      expect(data.tags).toEqual(['product-new-product', 'collection-all', 'products']);
       expect(revalidateTag).toHaveBeenCalledWith('product-new-product', 'max');
       expect(revalidateTag).toHaveBeenCalledWith('collection-all', 'max');
+      expect(revalidateTag).toHaveBeenCalledWith('products', 'max');
     });
   });
 
